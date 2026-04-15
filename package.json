@@ -1,0 +1,27 @@
+{
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.4.27",
+    "dotenv": "^17.4.2",
+    "postcss": "^8.5.9",
+    "prisma": "^5.22.0",
+    "tailwindcss": "^4.2.2",
+    "typescript": "^6.0.2"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "next": "^16.2.3",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio"
+  }
+}

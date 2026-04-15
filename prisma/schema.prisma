@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Mission {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  status      String     @default("inbox")
+  priority    String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  createdBy   String?
+  approvedBy  String?
+  objectives  Objective[]
+}
+
+model Objective {
+  id        String   @id @default(cuid())
+  missionId String
+  mission   Mission  @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  title     String
+  status    String   @default("inbox")
+  order     Int      @default(0)
+  tasks     Task[]
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  objectiveId String
+  objective   Objective @relation(fields: [objectiveId], references: [id], onDelete: Cascade)
+  title       String
+  status      String    @default("inbox")
+  assignee    String?
+  order       Int       @default(0)
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  type      String
+  message   String
+  agentId   String?
+  missionId String?
+  createdAt DateTime @default(now())
+}
