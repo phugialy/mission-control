@@ -185,6 +185,7 @@ function parseDailyLog(content: string): ScribeData["dailyLogs"] {
 export async function GET() {
   try {
     const data: ScribeData = {
+      lastUpdated: "",
       executionBoard: {
         activeMissions: [],
         agentStatus: [],
