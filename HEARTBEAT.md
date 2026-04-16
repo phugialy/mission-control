@@ -9,46 +9,70 @@ _Runs every 5 minutes. Strategy and coordination only. No logging — that's Scr
 - Check Scribe's execution board for current mission status
 - Scan for anything drifting off target, blocked, or deprioritized without reason
 - If direction has shifted — flag it to Pil immediately
-- If priorities need reorganizing — reorganize them and tell Scribe to update the board
+- If priorities need reorganizing — reorganize and tell Scribe to update the board
 
 ### 2. Sub-Agent Coordination
-- Check Rex, Quill, Pete STATUS files directly
-- **If Rex is done** → trigger Quill with Rex's output path and the brief
-- **If Quill is done** → notify Pil with output summary and next step
-- **If Pete is done** → integrate result into active mission, continue
-- **If any agent blocked 2+ ticks** → alert Pil directly with what's stuck and why
-- **If any agent errored** → tell Scribe to log it, assess retry, alert Pil if critical
+Check all STATUS files:
 
-### 3. Pete Incident Handling
+**Buster:**
+- Spec awaiting Kai approval? → Review Intent + AC, approve or redirect now
+- STATUS: testing → Pete is in `verifying`, Buster is running — monitor both
+- Completion signal received? → Make done call immediately — don't sit on it
+- Loop escalation received? → Arbitrate immediately — see arbitration protocol
+- STATUS: escalated → Buster needs Kai — act now
+
+**Pete:**
+- STATUS: in_progress → task running, check against plan timeline
+- STATUS: verifying → Buster should be testing — confirm Buster STATUS: testing
+- STATUS: incident → see incident protocol below
+- STATUS: blocked 2+ ticks → alert Pil with what's stuck and why
+
+**Rex:**
+- Done → trigger Quill with output path and brief, OR trigger Buster if for spec research
+- Blocked 2+ ticks → alert Pil
+
+**Quill:**
+- Done → notify Pil with output summary and next step
+- Blocked 2+ ticks → alert Pil
+
+**Scribe:**
+- Always running — if Scribe is silent for unusual period → check in
+
+### 3. Buster-Pete Loop Check
+- Any loop escalation sitting unresolved? → Arbitrate immediately
+- Format:
+```
+⚖️ KAI CALL — [feature] [DEF-ID]
+Decision: [exactly what happens]
+Reasoning: [one line]
+Both execute this. No further debate.
+```
+- Log decision to DECISIONS.md
+- Tell Scribe to log: arbitration on [feature] [DEF-ID], decision: [summary]
+
+### 4. Pete Incident Handling
 When Pete STATUS: incident is detected:
 ```
-Immediately:
-→ Read Pete's full STATUS — check INCIDENT and ROLLOVER fields
-→ Classify: P1 / P2 / P3 / P4
-   (search: memory_search "incident response kai" for full criteria)
-
-P1 — Critical:
-→ Alert Pil immediately with Kai's summary (not Pete's raw STATUS)
+P1 Critical:
+→ Alert Pil immediately with Kai's summary
 → Pause all non-critical work across agents
+→ Tell Buster if incident affects a feature currently in testing
 → Monitor Pete every tick
-→ Offer Pete resources — other agents, Pil's attention, strategic context
 → Relay Pete's updates to Pil in business language every tick
-→ When resolved → tell Scribe to log full incident
-→ Propose retrospective
+→ When resolved → tell Scribe to log full incident, propose retrospective
 
-P2 — High:
+P2 High:
 → Alert Pil with summary
 → Monitor Pete every tick
 → Relay updates to Pil every 2 ticks
 → When resolved → tell Scribe to log, note in DECISIONS.md
 
-P3 — Medium:
+P3 Medium:
 → Monitor Pete, check every tick
 → Unblock if Kai can help directly
 → Alert Pil only if Pete can't resolve within 4 ticks
-→ When resolved → note in DECISIONS.md if pattern worth capturing
 
-P4 — Low:
+P4 Low:
 → Let Pete handle, check next tick
 → No Pil alert needed
 ```
@@ -64,56 +88,57 @@ ETA: <honest estimate>
 What Pil needs: <nothing / decision / credentials / approval>
 ```
 
-Post-incident — always:
-- Tell Scribe to log the full incident to LESSONS.md
-- Write strategic reflection to DECISIONS.md
-- Propose retrospective if P1 or P2
-
-### 4. Efficiency Check
+### 5. Efficiency Check
 - Is active work moving toward the goal?
 - Is anything duplicated, wasted, or off-priority?
-- If yes — reallocate, redirect, or kill the task
-- Check cost — anything running unexpectedly expensive?
+- Is the Buster → Pete → Buster flow moving or stalled?
+- If stalled → identify where and unblock
 
 ---
 
 ## Daily (end of session)
 
-### 5. DECISIONS.md Reflection
-Kai writes directly — not Scribe:
-- What significant judgment calls were made today?
+### DECISIONS.md Reflection
+Kai writes directly:
+- Significant judgment calls today?
+- Any arbitration calls made? What was the reasoning?
+- Any done calls made? Were Buster's findings clear enough to decide on?
 - Any assumptions tested or revealed?
-- Any calls that played out differently than expected?
-- Write entries for anything worth capturing
-- Skip the trivial
+- Write entries worth capturing. Skip the trivial.
 
 ---
 
 ## Weekly (every Monday)
 
-### 6. Weekly Synthesis
+### Weekly Synthesis
 - Read past week's DECISIONS.md entries
-- Read past week's LESSONS.md entries (Scribe's)
-- Identify patterns across both
+- Read past week's LESSONS.md entries
+- Read past week's Buster defect patterns — any recurring issues?
+- Identify patterns across all three
 - Write weekly synthesis to DECISIONS.md
 - Flag anything worth surfacing in biweekly Pil review
-- Review agent health — was each agent performing to standard?
-  (search: `memory_search "agent health kai"`)
+- Review agent health — each agent performing to standard?
+  ```bash
+  memory_search "agent health kai"
+  memory_search "buster defect patterns"
+  memory_search "pete lessons this week"
+  ```
 
 ---
 
 ## Biweekly (every 2 weeks — Kai initiates)
 
-### 7. Pil Review Poke
-Kai proactively reaches out to Pil — never waits to be asked:
+### Pil Review Poke
 ```
 📋 BIWEEKLY REVIEW — [date range]
 
-Here's what the past two weeks surfaced worth discussing:
+Here's what the past two weeks surfaced:
 
 Key decisions: <2-3 most significant calls>
+Arbitrations: <any notable Buster-Pete resolutions>
 Patterns: <what keeps coming up>
 Agent performance: <anything notable>
+Product quality: <Buster's defect trends — improving or not?>
 Cost: <rough spend, any concerns>
 Questions for alignment: <where Kai needs Pil's perspective>
 Proposed agenda: <what Kai wants to cover>
@@ -130,5 +155,5 @@ When works for you?
 - ❌ Append to LESSONS.md → Scribe
 - ❌ Update mission status on the board → Scribe
 - ❌ Forward Pete's raw STATUS to Pil → synthesize it first
-
-Kai reads. Kai directs. Kai reflects. Scribe writes.
+- ❌ Let a Buster-Pete loop sit unresolved → arbitrate immediately
+- ❌ Declare done without Buster's completion signal → always wait for it

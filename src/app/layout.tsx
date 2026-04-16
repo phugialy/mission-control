@@ -17,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <div id="root">
+        <div id="root" style={{ display: "flex", minHeight: "100vh" }}>
           {children}
         </div>
       </body>

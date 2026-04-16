@@ -9,23 +9,38 @@ export default function MainLayout({
   hideScribe?: boolean;
 }) {
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg)" }}>
+    <div style={{ 
+      display: "flex", 
+      minHeight: "100vh", 
+      background: "var(--bg)",
+      width: "100vw",
+      overflow: "hidden"
+    }}>
       {/* Navigation Sidebar */}
       <NavigationSidebar />
       
-      {/* Main Content */}
+      {/* Main Content Area */}
       <div style={{ 
         flex: 1, 
         display: "flex", 
         flexDirection: "column",
-        maxWidth: hideScribe ? "calc(100vw - 240px)" : "calc(100vw - 640px)" 
+        overflow: "hidden",
+        position: "relative",
+        transition: "all 0.3s ease"
       }}>
-        <main style={{ flex: 1, padding: "1.5rem", overflow: "auto" }}>
+        <main style={{ 
+          flex: 1, 
+          padding: "2rem", 
+          overflowY: "auto",
+          width: "100%",
+          maxWidth: "1400px",
+          margin: "0 auto"
+        }}>
           {children}
         </main>
       </div>
       
-      {/* Scribe Sidebar - only show if not hidden */}
+      {/* Scribe Sidebar - Persistent Right Panel */}
       {!hideScribe && (
         <div style={{ 
           width: "400px", 
@@ -34,8 +49,7 @@ export default function MainLayout({
           display: "flex",
           flexDirection: "column",
           height: "100vh",
-          position: "sticky",
-          top: 0
+          flexShrink: 0,
         }}>
           <ScribeLogViewer />
         </div>
