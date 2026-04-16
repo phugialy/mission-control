@@ -51,65 +51,64 @@ function parseExecutionBoard(content: string): ScribeData["executionBoard"] {
     ideas: [] as ScribeData["executionBoard"]["ideas"],
   };
 
-  // Parse Active Missions table
-  const missionsMatch = content.match(/## Active Missions\n\| Mission.*\|\n((?:\|.*\|\n)+)/);
-  if (missionsMatch) {
-    const lines = missionsMatch[1].trim().split("\n");
-    for (const line of lines.slice(1)) {
-      // Skip separator line
-      if (line.match(/^\|[\s-]+\|/)) continue;
-      const match = line.match(/\|([^|]+)\|([^|]+)\|([^|]+)\|([^|]+)\|([^|]+)\|/);
-      if (match) {
-        result.activeMissions.push({
-          mission: match[1].trim(),
-          owner: match[2].trim(),
-          status: match[3].trim(),
-          lastUpdate: match[4].trim(),
-          blockers: match[5].trim(),
-        });
-      }
+  // Helper to extract table rows between headings
+  const extractTable = (text: string, startPattern: string): string[] => {
+    const regex = new RegExp(startPattern + "\\n([\\s\\S]*?)(?:\\n##|\\n---|\\n\\n|$)");
+    const match = text.match(regex);
+    if (!match) return [];
+    const section = match[1];
+    // Extract only actual data rows (skip header and separator)
+    return section.split("\n")
+      .filter(l => l.includes("|") && !l.match(/^\|\s*[-]+\s*\|/) && !l.match(/^\|\s*\w+.*\w+\s*\|$/))
+      .map(l => l.trim());
+  };
+
+  // Parse Active Missions
+  const missionLines = extractTable(content, "## Active Missions");
+  for (const line of missionLines) {
+    const match = line.match(/\|([^|]+)\|([^|]+)\|([^|]+)\|([^|]+)\|([^|]+)\|/);
+    if (match) {
+      result.activeMissions.push({
+        mission: match[1].trim(),
+        owner: match[2].trim(),
+        status: match[3].trim(),
+        lastUpdate: match[4].trim(),
+        blockers: match[5].trim(),
+      });
     }
   }
 
-  // Parse Agent Status table
-  const agentMatch = content.match(/## Agent Status\n\| Agent.*\|\n((?:\|.*\|\n)+)/);
-  if (agentMatch) {
-    const lines = agentMatch[1].trim().split("\n");
-    for (const line of lines.slice(1)) {
-      if (line.match(/^\|[\s-]+\|/)) continue;
-      const match = line.match(/\|([^|]+)\|([^|]+)\|([^|]+)\|([^|]+)\|/);
-      if (match) {
-        result.agentStatus.push({
-          agent: match[1].trim(),
-          currentTask: match[2].trim(),
-          status: match[3].trim(),
-          lastSignal: match[4].trim(),
-        });
-      }
+  // Parse Agent Status
+  const agentLines = extractTable(content, "## Agent Status");
+  for (const line of agentLines) {
+    const match = line.match(/\|([^|]+)\|([^|]+)\|([^|]+)\|([^|]+)\|/);
+    if (match) {
+      result.agentStatus.push({
+        agent: match[1].trim(),
+        currentTask: match[2].trim(),
+        status: match[3].trim(),
+        lastSignal: match[4].trim(),
+      });
     }
   }
 
-  // Parse Parked table
-  const parkedMatch = content.match(/## Parked.*\n((?:\|.*\|\n)+)/);
-  if (parkedMatch) {
-    const lines = parkedMatch[1].trim().split("\n");
-    for (const line of lines.slice(1)) {
-      if (line.match(/^\|[\s-]+\|/)) continue;
-      const match = line.match(/\|([^|]+)\|([^|]+)\|([^|]+)\|/);
-      if (match && match[1].trim()) {
-        result.parked.push({
-          item: match[1].trim(),
-          waitingFor: match[2].trim(),
-          since: match[3].trim(),
-        });
-      }
+  // Parse Parked
+  const parkedLines = extractTable(content, "## Parked");
+  for (const line of parkedLines) {
+    const match = line.match(/\|([^|]+)\|([^|]+)\|([^|]+)\|/);
+    if (match && match[1].trim() && match[1].trim() !== "—") {
+      result.parked.push({
+        item: match[1].trim(),
+        waitingFor: match[2].trim(),
+        since: match[3].trim(),
+      });
     }
   }
 
   // Parse Ideas Queue
-  const ideasMatch = content.match(/## Ideas Queue\n((?:-.*\n)+)/);
-  if (ideasMatch) {
-    const lines = ideasMatch[1].trim().split("\n");
+  const ideasSection = content.match(/## Ideas Queue\n([\s\S]*?)(?:\n##|\n---|\\n\\n|$)/);
+  if (ideasSection) {
+    const lines = ideasSection[1].trim().split("\n");
     for (const line of lines) {
       const match = line.match(/- \[(\d{4}-\d{2}-\d{2})\] (.*)/);
       if (match) {
