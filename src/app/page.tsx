@@ -16,8 +16,10 @@ export default function Dashboard() {
       </header>
       
       <main className="p-6">
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 400px", gap: "1rem", alignItems: "start" }}>
-          <KanbanBoard />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 400px", gap: "1rem", alignItems: "start", overflowX: "auto" }}>
+          <div style={{ minWidth: 0 }}>
+            <KanbanBoard />
+          </div>
           <ScribeLogViewer />
         </div>
       </main>
